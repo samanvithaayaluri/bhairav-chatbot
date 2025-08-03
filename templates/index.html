@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ask Bhairav 🐶</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #fff8e7; padding: 20px; }
+    .chat-box { border: 2px solid #ffa; padding: 10px; max-width: 600px; margin: auto; }
+    .chat-log { max-height: 300px; overflow-y: auto; background: #fefefe; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; }
+    .user, .bot { margin: 5px 0; }
+    .user { font-weight: bold; }
+    .bot { color: #444; }
+  </style>
+</head>
+<body>
+  <div class="chat-box">
+    <h2>Ask Bhairav 🐶</h2>
+    <div class="chat-log" id="chat-log"></div>
+    <input type="text" id="user-input" placeholder="Ask something..." style="width: 70%;">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <!-- Link to external script file -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
