@@ -6,7 +6,7 @@ app = Flask(__name__)
 genai.configure(api_key="AIzaSyAwJMtY4PdkBzlPHZVV_q9HbNX73S91dAM")
 
 # ✅ Load the Gemini model (use 1.5 Flash for free and fast usage)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 @app.route("/")
 def home():
