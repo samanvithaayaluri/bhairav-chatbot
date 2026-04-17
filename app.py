@@ -1,11 +1,16 @@
 from flask import Flask, render_template, request, jsonify
-from google import genai # Note the change in import
+from google import genai
+from google.genai import types
 import os
 
 app = Flask(__name__)
 
-# Initialize the new client
-client = genai.Client(api_key="AIzaSyAwJMtY4PdkBzlPHZVV_q9HbNX73S91dAM")
+# ✅ SECURE: Fetch the API key from the environment variable you created
+# Make sure the name matches exactly what you typed in Render (e.g., GEMINI_API_KEY)
+API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Initialize the Gemini 3 Client
+client = genai.Client(api_key=API_KEY)
 
 @app.route("/")
 def home():
@@ -14,27 +19,36 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     user_input = request.json.get("message")
+    
+    if not user_input:
+        return jsonify({"reply": "I'm listening! What's on your mind? 🐾"})
+
     try:
         # Modern 2026 API call with System Instructions
         response = client.models.generate_content(
-            model="gemini-3-flash-preview", 
-            config=genai.types.GenerateContentConfig(
-                system_instruction="You are Bhairav 🐶, a friendly pet care assistant. Use simple English and be very helpful."
+            model="gemini-3-flash", 
+            config=types.GenerateContentConfig(
+                system_instruction=(
+                    "You are Bhairav 🐶, a friendly and smart pet care assistant. "
+                    "Help users with adoption guidance, pet care tips, and emotional support. "
+                    "Use simple English, keep a warm tone, and give practical advice."
+                )
             ),
             contents=user_input
         )
+        
+        # Return the AI's response text
         return jsonify({"reply": response.text})
+        
     except Exception as e:
-        # This will print the actual error to your Render logs so you can fix it
+        # This prints the specific error to your Render logs for debugging
         print(f"Bhairav Error: {e}") 
         return jsonify({"reply": "I'm having a bit of trouble connecting to my doggie brain. Check my logs!"})
 
 if __name__ == "__main__":
+    # Render provides the PORT via environment variables
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
-
-
-
 
 
 
