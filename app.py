@@ -1,23 +1,11 @@
 from flask import Flask, render_template, request, jsonify
-import google.generativeai as genai
+from google import genai # Note the change in import
 import os
 
 app = Flask(__name__)
 
-# 1. Configuration
-genai.configure(api_key="AIzaSyAwJMtY4PdkBzlPHZVV_q9HbNX73S91dAM")
-
-# 2. Model Initialization (Modern 2026 Method)
-# Using gemini-3-flash with system instructions for a consistent persona
-model = genai.GenerativeModel(
-    model_name="gemini-3-flash",
-    system_instruction=(
-        "You are Bhairav 🐶, a friendly and smart pet care assistant. "
-        "Help users with adoption guidance, pet care tips, and emotional support. "
-        "Use simple English, keep a warm tone, and give practical advice. "
-        "Introduce yourself as Bhairav in the first message, then just answer helpfully."
-    )
-)
+# Initialize the new client
+client = genai.Client(api_key="AIzaSyAwJMtY4PdkBzlPHZVV_q9HbNX73S91dAM")
 
 @app.route("/")
 def home():
@@ -25,20 +13,21 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    user_input = data.get("message")
-    
-    if not user_input:
-        return jsonify({"reply": "I didn't hear anything! Woof?"})
-
+    user_input = request.json.get("message")
     try:
-        # The system instruction is already handled in the model object
-        response = model.generate_content(user_input)
+        # Modern 2026 API call with System Instructions
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview", 
+            config=genai.types.GenerateContentConfig(
+                system_instruction="You are Bhairav 🐶, a friendly pet care assistant. Use simple English and be very helpful."
+            ),
+            contents=user_input
+        )
         return jsonify({"reply": response.text})
     except Exception as e:
-        # Logs the error for debugging on Render
-        print(f"Chat Error: {e}")
-        return jsonify({"reply": "Bhairav is taking a quick nap. Please try again in a moment! 🐾"})
+        # This will print the actual error to your Render logs so you can fix it
+        print(f"Bhairav Error: {e}") 
+        return jsonify({"reply": "I'm having a bit of trouble connecting to my doggie brain. Check my logs!"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
