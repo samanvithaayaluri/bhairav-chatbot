@@ -5,11 +5,10 @@ import os
 
 app = Flask(__name__)
 
-
+# 1. Securely fetch your new API Key from Render
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# ✅ 2. Initialize the client
-# If API_KEY is None, this will still initialize, but the first call will fail.
+# 2. Initialize the modern 2026 Client
 client = genai.Client(api_key=API_KEY)
 
 @app.route("/")
@@ -18,49 +17,37 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    # Check if the user even sent a message
     data = request.json
-    if not data:
-        return jsonify({"reply": "No data received! 🐾"})
-        
     user_input = data.get("message")
     
-    # Check if the API key is missing from Render's environment
-    if not API_KEY:
-        print("CRITICAL ERROR: GEMINI_API_KEY environment variable is NOT SET!", flush=True)
-        return jsonify({"reply": "System Error: My API Key is missing in Render. Please add it!"})
-
     if not user_input:
-        return jsonify({"reply": "I'm listening! What's on your mind? 🐾"})
+        return jsonify({"reply": "I'm listening! What's up? 🐾"})
 
     try:
-        # ✅ 3. Using the stable Gemini 1.5 Flash (most reliable for free tier)
-        # You can change this to "gemini-3-flash" once we verify the connection works.
+        # 3. Upgrade to Gemini 3 Flash (The 2026 Standard)
+        # This model is faster, smarter, and replaces the old 1.5/2.0 series
         response = client.models.generate_content(
-            model="gemini-1.5-flash", 
+            model="gemini-3-flash", 
             config=types.GenerateContentConfig(
                 system_instruction=(
-                    "You are Bhairav 🐶, a friendly and smart pet care assistant. "
-                    "Help users with adoption guidance, pet care tips, and emotional support. "
-                    "Use simple English, keep a warm tone, and give practical advice."
+                    "You are Bhairav 🐶, a friendly and smart pet care assistant for a pet adoption site. "
+                    "Help users with adoption advice, pet care tips, and emotional support. "
+                    "Use simple English, keep a warm tone, and be very helpful. "
+                    "If people ask about adopting, encourage them to look at the available pets on the site!"
                 )
             ),
             contents=user_input
         )
         
-        # Return the AI's response text
         return jsonify({"reply": response.text})
         
     except Exception as e:
-        # ✅ 4. The 'flush=True' makes this appear in Render Logs immediately
-        print(f"Bhairav Error Details: {str(e)}", flush=True) 
-        
-        # ✅ 5. Temporarily sending the ACTUAL error to the chat window for debugging
-        return jsonify({"reply": f"Doggie Brain Error: {str(e)}"})
+        # Logs the error to Render for you
+        print(f"Bhairav Error: {e}", flush=True) 
+        return jsonify({"reply": "I'm having a quick dognap. Please try again in a second! 🐾"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    # debug=False is better for Render production
     app.run(debug=False, host='0.0.0.0', port=port)
 
 
