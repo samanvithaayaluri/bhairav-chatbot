@@ -5,11 +5,11 @@ import os
 
 app = Flask(__name__)
 
-# ✅ SECURE: Fetch the API key from the environment variable you created
-# Make sure the name matches exactly what you typed in Render (e.g., GEMINI_API_KEY)
+# ✅ 1. Get the key and verify it's not empty
 API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Initialize the Gemini 3 Client
+# ✅ 2. Initialize the client
+# If API_KEY is None, this will still initialize, but the first call will fail.
 client = genai.Client(api_key=API_KEY)
 
 @app.route("/")
@@ -18,15 +18,26 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_input = request.json.get("message")
+    # Check if the user even sent a message
+    data = request.json
+    if not data:
+        return jsonify({"reply": "No data received! 🐾"})
+        
+    user_input = data.get("message")
     
+    # Check if the API key is missing from Render's environment
+    if not API_KEY:
+        print("CRITICAL ERROR: GEMINI_API_KEY environment variable is NOT SET!", flush=True)
+        return jsonify({"reply": "System Error: My API Key is missing in Render. Please add it!"})
+
     if not user_input:
         return jsonify({"reply": "I'm listening! What's on your mind? 🐾"})
 
     try:
-        # Modern 2026 API call with System Instructions
+        # ✅ 3. Using the stable Gemini 1.5 Flash (most reliable for free tier)
+        # You can change this to "gemini-3-flash" once we verify the connection works.
         response = client.models.generate_content(
-            model="gemini-3-flash", 
+            model="gemini-1.5-flash", 
             config=types.GenerateContentConfig(
                 system_instruction=(
                     "You are Bhairav 🐶, a friendly and smart pet care assistant. "
@@ -41,13 +52,15 @@ def chat():
         return jsonify({"reply": response.text})
         
     except Exception as e:
-        # This prints the specific error to your Render logs for debugging
-        print(f"Bhairav Error: {e}") 
-        return jsonify({"reply": "I'm having a bit of trouble connecting to my doggie brain. Check my logs!"})
+        # ✅ 4. The 'flush=True' makes this appear in Render Logs immediately
+        print(f"Bhairav Error Details: {str(e)}", flush=True) 
+        
+        # ✅ 5. Temporarily sending the ACTUAL error to the chat window for debugging
+        return jsonify({"reply": f"Doggie Brain Error: {str(e)}"})
 
 if __name__ == "__main__":
-    # Render provides the PORT via environment variables
     port = int(os.environ.get("PORT", 5000))
+    # debug=False is better for Render production
     app.run(debug=False, host='0.0.0.0', port=port)
 
 
