@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-# ✅ 1. Get the key and verify it's not empty
+
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 # ✅ 2. Initialize the client
